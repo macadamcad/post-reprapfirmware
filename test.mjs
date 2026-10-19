@@ -24,12 +24,13 @@ test('controller/manual-change instructions and no privileged built-in syntax',(
  const posts=registration();const p=posts[0].profile;
  assert.equal(p.defaultToolChange,'automatic');assert.equal(p.units,'mm');
  assert.equal(p.events.spindleCW[0].line[0].text,'M3 S');assert.equal(p.events.spindleCCW[0].line[0].text,'M4 S');
- assert.equal(p.events.coolantOff[0].line[0].text,'M9');
+ if(manifest.id.endsWith('grbl-linuxcnc'))assert.equal(p.events.coolantOff[0].line[0].text,'M9');
+ else assert.equal(p.events.coolantFlood,undefined);
  if(manifest.id.endsWith('grbl-linuxcnc')) {
   assert.equal(posts.length,2);assert.equal(p.events.toolChangeAutomatic[0].line[2].text,' M6');
   const grbl=posts.find(p=>p.id==='grbl');assert.equal(grbl.profile.axes,'xyz');
   assert.equal(grbl.profile.defaultToolChange,'manual');assert.equal(grbl.profile.events.toolChangeManual.at(-1).line[0].text,'M0');
-  assert.equal(grbl.profile.events.toolChangeAutomatic,undefined);assert.equal(grbl.profile.events.rotaryIndex,undefined);
+  assert.equal(grbl.profile.events.toolChangeAutomatic,undefined);assert.equal(grbl.profile.events.rotaryIndex,undefined);assert.equal(grbl.profile.events.coolantMist,undefined);
   assert(!JSON.stringify(grbl).includes('G43'));assert(!JSON.stringify(grbl).includes('G91.1'));
  } else {assert.equal(posts.length,1);assert.equal(p.events.toolChangeAutomatic[0].line[0].text,'T');assert.equal(p.events.toolChangeManual,undefined);assert(!JSON.stringify(p.events.toolChangeAutomatic).includes('M6'));}
 });

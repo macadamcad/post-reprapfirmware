@@ -118,33 +118,6 @@ module.exports = [
             ]
           }
         ],
-        "coolantOff": [
-          {
-            "line": [
-              {
-                "text": "M9"
-              }
-            ]
-          }
-        ],
-        "coolantFlood": [
-          {
-            "line": [
-              {
-                "text": "M8"
-              }
-            ]
-          }
-        ],
-        "coolantMist": [
-          {
-            "line": [
-              {
-                "text": "M7"
-              }
-            ]
-          }
-        ],
         "rapid": [
           {
             "line": [

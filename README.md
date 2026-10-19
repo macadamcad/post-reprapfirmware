@@ -8,7 +8,7 @@ Ordinary Macadam plugins that export files; machine communication drivers are se
 
 `default` / `repRapFirmware`: RepRapFirmware / Duet CNC, bare `Tn` tool changes through controller-owned `tfree`/`tpre`/`tpost` macros. Default is automatic and requires a mapping. There is no manual-change hook: selecting manual policy fails explicitly. Tool offsets/parking belong to configured controller macros. Drilling is explicit peck motion, never substituted canned cycles.
 
-All supplied profiles output millimetres, absolute XYZ, incremental XY arcs/helices/full circles, G54–G59, M3/M4 spindle, M5 stop, M7/M8 coolant and M9 off, M2 end. Indexed A is declared only where supported. Machine wiring/macros must match these instructions; physical qualification is not implied.
+All supplied profiles output millimetres, absolute XYZ, incremental XY arcs/helices/full circles, G54–G59, M3/M4 spindle, M5 stop, M2 end. Coolant is deliberately undeclared: requests for flood/mist fail until a machine-specific profile supplies configured and qualified hooks. Indexed A is declared only where supported. Machine wiring/macros must match these instructions; physical qualification is not implied.
 
 ## Install, configure and use
 
@@ -23,3 +23,5 @@ Read [API.md](API.md) and use [postprocessor-api.d.ts](postprocessor-api.d.ts) t
 Run `node --test test.mjs` (Node 20+, built-in modules only). Three package tests cover public registration, integrity and explicit controller policy. These do not replace real Rust byte/golden, custom-event/negative tests, matching builds or UI qualification. Those remain UNRUN in this source-only cloud lane.
 
 Only newly authorized Postprocessor package source, declarations and documentation are published here. See [LICENSE](LICENSE).
+
+Controller-scope reference: [GRBL compile-time configuration](https://github.com/gnea/grbl/blob/master/grbl/config.h) documents optional, default-disabled ENABLE_M7. RRF coolant words are not assumed from the generic RepRap G-code list; configure explicit machine-specific hooks before declaring that capability.
