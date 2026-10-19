@@ -1,0 +1,11 @@
+{
+  "apiVersion": "1",
+  "capabilities": [
+    "cam:postprocess"
+  ],
+  "entry": "index.js",
+  "id": "com.macadam.posts.reprapfirmware",
+  "integrity": "sha256-f31b74258bce272ce6c0e4e9037fa82448763e498d69fa8f7157b5ed7ad65fac",
+  "name": "RepRapFirmware / Duet post",
+  "version": "1.0.0"
+}
