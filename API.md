@@ -32,7 +32,7 @@ Numeric positions, arc offsets, safe clearance and feeds arrive in millimetres/m
 | spindleStop, coolantOff, coolantFlood, coolantMist, programEnd | — | — |
 | unmappedTool | — | toolName |
 
-`feed` must be optional, because the host omits unchanged modal feed values. Its prefix/suffix disappear with it. Dynamic labels can only appear inside comments; control/line characters and closing comment delimiters are escaped. A manual-change hook, stop/coolant hook and program end must contain executable output; a comment alone is refused. A declaration of manual-change capability asserts that its controller instructions actually wait for safe user intervention; Macadam cannot prove arbitrary controller syntax. Validate it on the target machine before use.
+`modalFeed` defaults to true: `feed` must then be optional because the host omits unchanged modal feed values. Set `modalFeed: false` for custom syntax requiring a feed on every nonrapid motion; the binding may then be mandatory. Its prefix/suffix disappear with it. Dynamic labels can only appear inside comments; control/line characters and closing comment delimiters are escaped. A manual-change hook, stop/coolant hook and program end must contain executable output; a comment alone is refused. A declaration of manual-change capability asserts that its controller instructions actually wait for safe user intervention; Macadam cannot prove arbitrary controller syntax. Validate it on the target machine before use.
 
 Example of independently authored syntax (not a G-code prefix preset):
 
@@ -51,7 +51,7 @@ linear: [{line: [
 
 ## Host export settings and ownership
 
-Typed `PostExportConfiguration` covers post identity, units, work offset, precision, tool-change mode, feeds/RPM, spindle direction, coolant, tool mapping and per-operation settings keyed by stable authored operation ID. Export-info metadata lists operation IDs and profile capabilities. Both clients expose common settings and check the selected descriptor is still installed/unchanged before returning a file. Cancel returns no file and does not mutate the document or installation.
+Typed `PostExportConfiguration` covers post identity, units, work offset, precision, tool-change mode, feeds/RPM, spindle direction, coolant, tool mapping and per-operation settings keyed by the stable container-path/operation occurrence key returned by export info. Export-info metadata lists operation IDs and profile capabilities. Both clients expose common settings and check the selected descriptor is still installed/unchanged before returning a file. Cancel returns no file and does not mutate the document or installation.
 
 The host reserves `com.macadam.posts` and its descendants plus shipped package identities. Installed code cannot self-grant ownership, replace a bundled profile, or uninstall it. Existing `com.macadam.examples.*` packages remain valid. A user-requested replacement of an ordinary local package is atomic after validation. Web mutations are serialized; persistence failures restore the prior registration; late command replies from unloaded/replaced packages are rejected. Restore isolates each bad package. This is trusted local code, not a hostile-code sandbox or verified publisher-signing system.
 

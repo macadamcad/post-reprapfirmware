@@ -11,6 +11,8 @@ export type PostEventBlocks<V extends PostValue = never, L extends string = neve
 )[];
 export interface PostEventProfile {
   readonly units: 'mm' | 'inch';
+  /** Defaults true; false emits an effective feed on every nonrapid motion. */
+  readonly modalFeed?: boolean;
   readonly axes: 'xyz' | 'xyz-indexed-a';
   readonly arcs: 'none' | 'xy-incremental';
   readonly helices: boolean; readonly fullCircles: boolean;
