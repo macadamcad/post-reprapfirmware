@@ -5,7 +5,7 @@
   ],
   "entry": "index.js",
   "id": "com.macadam.posts.reprapfirmware",
-  "integrity": "sha256-f31b74258bce272ce6c0e4e9037fa82448763e498d69fa8f7157b5ed7ad65fac",
+  "integrity": "sha256-867a28eb43bd633eb70bddb51f322d37add2a7db917202a02dddd3781c5bcfd6",
   "name": "RepRapFirmware / Duet post",
-  "version": "1.0.0"
+  "version": "2.0.0-alpha.1"
 }

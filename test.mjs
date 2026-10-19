@@ -2,56 +2,34 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-const files = Object.fromEntries(await Promise.all(
-  ['index.js', 'post.js', 'plugin.json'].map(async p => [p, await readFile(new URL(p, import.meta.url), 'utf8')])
-));
-const manifest = JSON.parse(files['plugin.json']);
+const files = Object.fromEntries(await Promise.all(['index.js','post.js','plugin.json'].map(async p=>[p,await readFile(new URL(p,import.meta.url),'utf8')])));
+const manifest=JSON.parse(files['plugin.json']);
 function registration() {
-  const cache = new Map();
-  function load(p) {
-    if (cache.has(p)) return cache.get(p);
-    const module = {exports: {}};
-    const activate = new Function('module', 'exports', 'require',
-      files[p] + '\n;return typeof activate === "function" ? activate : null;'
-    )(module, module.exports, request => {
-      assert.equal(request, './post.js');
-      return load('post.js').exports;
-    });
-    const result = {exports: module.exports, activate};
-    cache.set(p, result);
-    return result;
-  }
-  const registered = [];
-  load(manifest.entry).activate(Object.freeze({
-    apiVersion: '1', registerPostProcessor: post => registered.push(post)
-  }));
-  assert.equal(registered.length, 1);
-  return registered[0];
+  const module={exports:{}};
+  new Function('module', files['post.js'])(module);
+  const activate=new Function('require', files['index.js']+'\nreturn activate;')(request=>{assert.equal(request,'./post.js');return module.exports;});
+  const posts=[];activate(Object.freeze({apiVersion:'1',registerPostProcessor:post=>posts.push(post)}));
+  return posts;
 }
-test('ordinary public registration and stable identity', () => {
-  const post = registration();
-  assert.equal(manifest.id, 'com.macadam.posts.reprapfirmware');
-  assert.deepEqual(manifest.capabilities, ['cam:postprocess']);
-  assert.equal(post.id, 'default');
-  assert.equal(post.apiVersion, '1');
-  assert.deepEqual(post.aliases, ['repRapFirmware']);
-  assert.equal(post.extension, 'nc');
-  assert.equal(post.mime, 'text/plain');
-  assert.deepEqual(registration(), post);
+test('ordinary API2 public registration and deterministic declarations',()=>{
+ const posts=registration();assert.deepEqual(posts,registration());assert.deepEqual(manifest.capabilities,['cam:postprocess']);
+ assert.equal(manifest.version,'2.0.0-alpha.1');assert.equal(posts[0].id,'default');
+ assert(posts.every(p=>p.apiVersion==='2'&&p.mime==='text/plain'&&p.extension==='nc'));
 });
-test('canonical multi-file source integrity', () => {
-  const source = ['index.js', 'post.js'].map(p =>
-    Buffer.byteLength(p) + '\n' + p + Buffer.byteLength(files[p]) + '\n' + files[p]
-  ).join('');
-  assert.equal(manifest.integrity, 'sha256-' + createHash('sha256').update(source).digest('hex'));
+test('canonical committed JavaScript source integrity',()=>{
+ const source=['index.js','post.js'].map(p=>`${Buffer.byteLength(p)}\n${p}${Buffer.byteLength(files[p])}\n${files[p]}`).join('');
+ assert.equal(manifest.integrity,'sha256-'+createHash('sha256').update(source).digest('hex'));
 });
-test('controller instructions are explicit and unchanged', () => {
-  const p = registration().profile;
-  assert.equal(p.units, 'mm');
-  assert.equal(p.arcs, 'xy-incremental');
-  assert.deepEqual(p.motion, {ccwArc:'G3', cwArc:'G2', linear:'G1', rapid:'G0'});
-  assert.equal(p.spindleStart[0][0].text, 'M3 S');
-  assert.deepEqual(p.spindleStop, [[{text:'M5'}]]);
-  assert.deepEqual(p.programEnd, [[{text:'M2'}]]);
-  assert.deepEqual(p.toolChange, [[{text:'T'}, {precision:'integer', value:'toolSlot'}]]);
+test('controller/manual-change instructions and no privileged built-in syntax',()=>{
+ const posts=registration();const p=posts[0].profile;
+ assert.equal(p.defaultToolChange,'automatic');assert.equal(p.units,'mm');
+ assert.equal(p.events.spindleCW[0].line[0].text,'M3 S');assert.equal(p.events.spindleCCW[0].line[0].text,'M4 S');
+ assert.equal(p.events.coolantOff[0].line[0].text,'M9');
+ if(manifest.id.endsWith('grbl-linuxcnc')) {
+  assert.equal(posts.length,2);assert.equal(p.events.toolChangeAutomatic[0].line[2].text,' M6');
+  const grbl=posts.find(p=>p.id==='grbl');assert.equal(grbl.profile.axes,'xyz');
+  assert.equal(grbl.profile.defaultToolChange,'manual');assert.equal(grbl.profile.events.toolChangeManual.at(-1).line[0].text,'M0');
+  assert.equal(grbl.profile.events.toolChangeAutomatic,undefined);assert.equal(grbl.profile.events.rotaryIndex,undefined);
+  assert(!JSON.stringify(grbl).includes('G43'));assert(!JSON.stringify(grbl).includes('G91.1'));
+ } else {assert.equal(posts.length,1);assert.equal(p.events.toolChangeAutomatic[0].line[0].text,'T');assert.equal(p.events.toolChangeManual,undefined);assert(!JSON.stringify(p.events.toolChangeAutomatic).includes('M6'));}
 });
